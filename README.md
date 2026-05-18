@@ -27,6 +27,8 @@ node server.js
 
 ![image-20260517005927804](C:/Users/16658/AppData/Roaming/Typora/typora-user-images/image-20260517005927804.png)
 
+![image-20260517011958859](C:/Users/16658/AppData/Roaming/Typora/typora-user-images/image-20260517011958859.png)
+
 ## 扩展配置
 
 点击扩展图标，弹出配置面板：
@@ -79,6 +81,54 @@ curl http://localhost:8080/cookies/all
 示例:
 
 ![image-20260517005428515](C:/Users/16658/AppData/Roaming/Typora/typora-user-images/image-20260517005428515.png)
+
+## 后端部署
+
+```dockerfile
+方案 A：把它们放到同一个 Docker 网络（推荐）
+
+  # 查看 openclaw-gateway 用的网络
+  docker inspect openclaw-gateway --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}'
+
+  # 把你的 cookie-server 也加入那个网络，修改 docker-compose.yml：
+
+  修改 docker-compose.yml：
+
+  services:
+    cookie-server:
+      build: ./backend  #根据 build: ./backend 找到 backend/Dockerfile，自动 build 
+      ports:
+        - "8080:8080"
+      restart: unless-stopped
+      networks:
+        - openclaw-net
+
+  networks:
+    openclaw-net:
+      external: true   # 使用 openclaw-gateway 已有的网络
+
+  然后在你的代码里用容器名访问：http://openclaw-gateway:18789
+
+```
+
+```
+docker-compose up -d --build  每次都重新构建镜像再启动
+```
+
+![image-20260518225918856](C:/Users/16658/AppData/Roaming/Typora/typora-user-images/image-20260518225918856.png)
+
+```
+  │ cookie-server    │ openclaw-gateway │ http://openclaw-gateway:18789 
+  │ openclaw-gateway │ cookie-server    │ http://cookie-server:8080    
+```
+
+使用
+
+```
+curl http://cookie-server:8080/cookies/all   
+```
+
+![image-20260518231357612](C:/Users/16658/AppData/Roaming/Typora/typora-user-images/image-20260518231357612.png)
 
 ## 使用示例
 

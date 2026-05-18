@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>Cookie 管理</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; padding: 20px; }
+        h1 { font-size: 20px; margin-bottom: 16px; }
+        .card { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card h2 { font-size: 15px; color: #333; margin-bottom: 8px; }
+        .card .meta { font-size: 12px; color: #999; margin-bottom: 8px; }
+        .cookie-str { font-family: monospace; font-size: 12px; word-break: break-all; background: #f8f8f8; padding: 10px; border-radius: 4px; max-height: 120px; overflow-y: auto; }
+        .btn { padding: 6px 14px; font-size: 13px; border: none; border-radius: 4px; cursor: pointer; margin-right: 8px; margin-top: 8px; }
+        .btn-copy { background: #0d6efd; color: #fff; }
+        .btn-copy:hover { background: #0b5ed7; }
+        .btn-refresh { background: #6c757d; color: #fff; }
+        .btn-refresh:hover { background: #5a6268; }
+        .empty { color: #999; text-align: center; padding: 40px; }
+        .toast { position: fixed; top: 20px; right: 20px; background: #28a745; color: #fff; padding: 10px 20px; border-radius: 4px; display: none; font-size: 14px; }
+        .count { display: inline-block; background: #e9ecef; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-left: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Cookie 管理 <button class="btn btn-refresh" onclick="loadCookies()">刷新</button></h1>
+    <div id="list"></div>
+    <div class="toast" id="toast">已复制</div>
+    <script>
+        async function loadCookies() {
+            const res = await fetch('/cookies/all');
+            const data = await res.json();
+            const list = document.getElementById('list');
+
+            if (Object.keys(data).length === 0) {
+                list.innerHTML = '<div class="empty">暂无 Cookie，请在浏览器中访问目标网站</div>';
+                return;
+            }
+
+            list.innerHTML = Object.entries(data).map(([domain, info]) => `
+                <div class="card">
+                    <h2>${domain} <span class="count">${info.count} 个</span></h2>
+                    <div class="meta">更新时间: ${new Date(info.updatedAt).toLocaleString()}</div>
+                    <div class="cookie-str" id="str-${domain.replace(/\./g, '_')}">${info.cookieString}</div>
+                    <button class="btn btn-copy" onclick="copyStr('${domain}')">复制 Cookie</button>
+                    <button class="btn btn-copy" onclick="copyCurl('${domain}')">复制为 curl</button>
+                </div>
+            `).join('');
+        }
+
+        async function copyStr(domain) {
+            const res = await fetch('/cookies?domain=' + domain);
+            const text = await res.text();
+            await navigator.clipboard.writeText(text);
+            showToast('Cookie 已复制');
+        }
+
+        async function copyCurl(domain) {
+            const res = await fetch('/cookies?domain=' + domain);
+            const text = await res.text();
+            const curl = `curl "https://example.com/api" \\\n  -H "Cookie: ${text}"`;
+            await navigator.clipboard.writeText(curl);
+            showToast('curl 命令已复制');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 1500);
+        }
+
+        loadCookies();
+    </script>
+</body>
+</html>

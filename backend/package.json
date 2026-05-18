@@ -1,10 +1,11 @@
 {
   "name": "cookie-receiver",
   "version": "1.0.0",
-  "description": "Simple backend to receive cookies from Chrome extension",
+  "description": "Simple backend to receive cookies from Chrome extension or Playwright",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "browser": "node browser.js",
     "dev": "nodemon server.js"
   },
   "dependencies": {

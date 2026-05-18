@@ -1,9 +1,11 @@
 const express = require('express');
+const path = require('path');
 const bodyParser = require('body-parser');
 const app = express();
 const PORT = 8080;
 
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 const cookieStore = {};
 
@@ -55,7 +57,11 @@ app.get('/cookies', (req, res) => {
 app.get('/cookies/all', (req, res) => {
     const result = {};
     for (const [domain, entry] of Object.entries(cookieStore)) {
-        result[domain] = toCookieString(entry.cookies);
+        result[domain] = {
+            cookieString: toCookieString(entry.cookies),
+            count: entry.cookies.length,
+            updatedAt: new Date(entry.updatedAt).toISOString()
+        };
     }
     res.json(result);
 });
@@ -65,7 +71,7 @@ function toCookieString(cookies) {
 }
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`服务器运行在 http://0.0.0.0:${PORT}`);
+    console.log(`服务器运行在 http://localhost:${PORT}`);
     console.log(`\n用法:`);
     console.log(`  GET /cookies          - 获取最近更新的 Cookie（纯文本，直接用）`);
     console.log(`  GET /cookies?domain=x - 获取指定域名的 Cookie`);
