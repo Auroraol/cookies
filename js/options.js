@@ -5,105 +5,66 @@ function saveSettings() {
     let extraBody = document.getElementById("extraBody").value;
     let rootDomain = document.getElementById("rootDomain").value;
     let domainFilter = document.getElementById("domainFilter").value;
+    let uploadMode = document.getElementById("uploadMode").value;
+    let uploadInterval = document.getElementById("uploadInterval").value || "30";
 
     chrome.storage.sync.set({
-        "serverAddress": serverAddress
+        serverAddress, cookieNames, token, extraBody, rootDomain, domainFilter, uploadMode, uploadInterval
     }, function () {
-        console.log("Save serverAddress completed")
-    });
-    chrome.storage.sync.set({
-        "cookieNames": cookieNames
-    }, function () {
-        console.log("Save cookieNames completed")
-    });
-    chrome.storage.sync.set({
-        "token": token
-    }, function () {
-        console.log("Save token completed")
-    });
-    chrome.storage.sync.set({
-        "extraBody": extraBody
-    }, function () {
-        console.log("Save extraBody completed")
-    });
-    chrome.storage.sync.set({
-        "rootDomain": rootDomain
-    }, function () {
-        console.log("Save rootDomain completed")
-    });
-    chrome.storage.sync.set({
-        "domainFilter": domainFilter
-    }, function () {
-        console.log("Save domainFilter completed")
+        console.log("Settings saved");
+        chrome.runtime.sendMessage({ action: "updateAlarm" });
+        showStatus("✓ 保存成功");
     });
 }
 
 function resetSettings() {
-    chrome.storage.sync.remove("serverAddress", function () {
+    chrome.storage.sync.clear(function () {
         document.getElementById("serverAddress").value = "";
-        console.log("Remove serverAddress completed")
-    });
-    chrome.storage.sync.remove("cookieNames", function () {
         document.getElementById("cookieNames").value = "";
-        console.log("Remove cookieNames completed")
-    });
-    chrome.storage.sync.remove("token", function () {
         document.getElementById("token").value = "";
-        console.log("Remove token completed")
-    });
-    chrome.storage.sync.remove("extraBody", function () {
         document.getElementById("extraBody").value = "";
-        console.log("Remove extraBody completed")
-    });
-    chrome.storage.sync.remove("rootDomain", function () {
         document.getElementById("rootDomain").value = "false";
-        console.log("Remove rootDomain completed")
-    });
-    chrome.storage.sync.remove("domainFilter", function () {
         document.getElementById("domainFilter").value = "";
-        console.log("Remove domainFilter completed")
+        document.getElementById("uploadMode").value = "manual";
+        document.getElementById("uploadInterval").value = "30";
+        toggleIntervalGroup();
+        chrome.runtime.sendMessage({ action: "updateAlarm" });
+        console.log("Settings reset");
     });
 }
 
 function loadSettings() {
-    chrome.storage.sync.get(["serverAddress"], function (result) {
-        if (result.serverAddress === undefined) {
-            result.serverAddress = "";
+    chrome.storage.sync.get(
+        ["serverAddress", "cookieNames", "token", "extraBody", "rootDomain", "domainFilter", "uploadMode", "uploadInterval"],
+        function (result) {
+            document.getElementById("serverAddress").value = result.serverAddress || "";
+            document.getElementById("cookieNames").value = result.cookieNames || "";
+            document.getElementById("token").value = result.token || "";
+            document.getElementById("extraBody").value = result.extraBody || "";
+            document.getElementById("rootDomain").value = result.rootDomain || "false";
+            document.getElementById("domainFilter").value = result.domainFilter || "";
+            document.getElementById("uploadMode").value = result.uploadMode || "manual";
+            document.getElementById("uploadInterval").value = result.uploadInterval || "30";
+            toggleIntervalGroup();
         }
-        document.getElementById("serverAddress").value = result.serverAddress;
-    })
-    chrome.storage.sync.get(["cookieNames"], function (result) {
-        if (result.cookieNames === undefined) {
-            result.cookieNames = "";
-        }
-        document.getElementById("cookieNames").value = result.cookieNames;
-    })
-    chrome.storage.sync.get(["token"], function (result) {
-        if (result.token === undefined) {
-            result.token = "";
-        }
-        document.getElementById("token").value = result.token;
-    })
-    chrome.storage.sync.get(["extraBody"], function (result) {
-        if (result.extraBody === undefined) {
-            result.extraBody = "";
-        }
-        document.getElementById("extraBody").value = result.extraBody;
-    })
-    chrome.storage.sync.get(["rootDomain"], function (result) {
-        if (result.rootDomain === undefined) {
-            result.rootDomain = "false";
-        }
-        document.getElementById("rootDomain").value = result.rootDomain;
-    })
-    chrome.storage.sync.get(["domainFilter"], function (result) {
-        if (result.domainFilter === undefined) {
-            result.domainFilter = "";
-        }
-        document.getElementById("domainFilter").value = result.domainFilter;
-    })
+    );
+}
+
+function toggleIntervalGroup() {
+    let mode = document.getElementById("uploadMode").value;
+    document.getElementById("intervalGroup").style.display = mode === "timer" ? "block" : "none";
+}
+
+function showStatus(text) {
+    let el = document.getElementById("saveStatus");
+    el.textContent = text;
+    el.style.display = "inline";
+    setTimeout(function () {
+        el.style.display = "none";
+    }, 2000);
 }
 
 document.addEventListener("DOMContentLoaded", loadSettings);
 document.getElementById("saveButton").addEventListener("click", saveSettings);
 document.getElementById("resetButton").addEventListener("click", resetSettings);
+document.getElementById("uploadMode").addEventListener("change", toggleIntervalGroup);

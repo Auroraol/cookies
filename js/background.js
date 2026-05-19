@@ -1,20 +1,17 @@
 function uploadCookies(domain, cookie) {
     chrome.storage.sync.get(["serverAddress"], function (result) {
-        console.log("serverAddress: " + JSON.stringify(result));
         if (result.serverAddress === undefined) {
             return;
         }
 
         let serverUrl = result.serverAddress;
         chrome.storage.sync.get(["token"], function (result) {
-            console.log("token: " + JSON.stringify(result));
             if (result.token === undefined) {
                 result.token = "";
             }
             let token = result.token;
 
             chrome.storage.sync.get(["extraBody"], function (result) {
-                console.log("extraBody: " + JSON.stringify(result));
                 let extraBody = {};
                 if (result.extraBody && result.extraBody.trim() !== '') {
                     try {
@@ -35,7 +32,7 @@ function uploadCookies(domain, cookie) {
                     }, extraBody))
                 }).then(response => {
                     if (response.ok) {
-                        console.log("Update cookie success");
+                        console.log("Update cookie success for " + domain);
                     } else {
                         console.error("Update cookie failed, status: " + response.status);
                     }
@@ -74,10 +71,9 @@ function matchDomain(domainFilter, hostname) {
     });
 }
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+function collectAndUpload(domain, url) {
     chrome.storage.sync.get(["domainFilter"], function (result) {
-        if (!matchDomain(result.domainFilter, request.domain)) {
-            console.log("Domain not matched, skip: " + request.domain);
+        if (!matchDomain(result.domainFilter, domain)) {
             return;
         }
 
@@ -88,40 +84,83 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             let cookieNames = result.cookieNames.split(",");
 
             chrome.storage.sync.get(["rootDomain"], function (result) {
-            console.log("rootDomain: " + JSON.stringify(result));
-            if (result.rootDomain === undefined) {
-                result.rootDomain = "false";
-            }
-            let domain = request.domain
-            let rootDomain = result.rootDomain === "true";
-            if (rootDomain) {
-                domain = parseRootDomain(domain)
-            }
-
-            let url = request.url;
-            try {
-                let urlObj = new URL(request.url);
-                if (rootDomain) {
-                    urlObj.hostname = domain;
+                if (result.rootDomain === undefined) {
+                    result.rootDomain = "false";
                 }
-                url = urlObj.origin + "/";
-            } catch (e) {}
+                let rootDomain = result.rootDomain === "true";
+                let effectiveDomain = rootDomain ? parseRootDomain(domain) : domain;
 
-            chrome.cookies.getAll({url: url}, function (cookies) {
-                console.log("cookies found: " + cookies.length + " for url: " + url);
-                let cookie = cookies.map((item) => parseNeedCookie(cookieNames, item))
-                    .filter(value => value !== undefined)
-                    .reduce((a, b) => a.concat(b), []);
+                let effectiveUrl = url;
+                try {
+                    let urlObj = new URL(url);
+                    if (rootDomain) {
+                        urlObj.hostname = effectiveDomain;
+                    }
+                    effectiveUrl = urlObj.origin + "/";
+                } catch (e) {}
 
-                uploadCookies(request.domain, JSON.stringify(cookie))
+                chrome.cookies.getAll({url: effectiveUrl}, function (cookies) {
+                    console.log("cookies found: " + cookies.length + " for url: " + effectiveUrl);
+                    let cookie = cookies.map((item) => parseNeedCookie(cookieNames, item))
+                        .filter(value => value !== undefined)
+                        .reduce((a, b) => a.concat(b), []);
+
+                    uploadCookies(domain, JSON.stringify(cookie));
+                });
             });
         });
-        });
     });
+}
 
+// 处理 content.js 发来的手动消息
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "updateAlarm") {
+        setupAlarm();
+        return;
+    }
+    collectAndUpload(request.domain, request.url);
     return true;
 });
 
+// 定时器触发：获取所有打开的 tab 的 cookie 并上传（去重）
+chrome.alarms.onAlarm.addListener(function (alarm) {
+    if (alarm.name !== "cookieUpload") return;
+
+    chrome.tabs.query({}, function (tabs) {
+        let processed = new Set();
+        tabs.forEach(function (tab) {
+            if (tab.url && (tab.url.startsWith("http://") || tab.url.startsWith("https://"))) {
+                try {
+                    let url = new URL(tab.url);
+                    let key = url.hostname;
+                    if (!processed.has(key)) {
+                        processed.add(key);
+                        collectAndUpload(url.hostname, tab.url);
+                    }
+                } catch (e) {}
+            }
+        });
+    });
+});
+
+// 根据设置启用/停用定时器
+function setupAlarm() {
+    chrome.alarms.clear("cookieUpload", function () {
+        chrome.storage.sync.get(["uploadMode", "uploadInterval"], function (result) {
+            if (result.uploadMode === "timer") {
+                let interval = Math.max(parseInt(result.uploadInterval) || 30, 10);
+                let periodInMinutes = interval / 60;
+                chrome.alarms.create("cookieUpload", { periodInMinutes: periodInMinutes });
+                console.log("Alarm set: every " + interval + " seconds");
+            } else {
+                console.log("Alarm cleared: manual mode");
+            }
+        });
+    });
+}
+
+// 启动时初始化定时器
+setupAlarm();
 
 function filterCookies(cookieRegex, cookie) {
     let cookieName = cookie.name;

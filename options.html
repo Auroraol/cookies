@@ -42,6 +42,17 @@
         </select>
     </div>
     <div class="mb-3">
+        <label class="form-label" for="uploadMode">上传模式</label>
+        <select class="form-select" id="uploadMode">
+            <option value="manual">手动（页面加载时上传）</option>
+            <option value="timer">定时自动上传</option>
+        </select>
+    </div>
+    <div class="mb-3" id="intervalGroup" style="display:none;">
+        <label class="form-label" for="uploadInterval">上传间隔（秒）</label>
+        <input class="form-control" id="uploadInterval" type="number" min="10" value="30" placeholder="30">
+    </div>
+    <div class="mb-3">
         <label class="form-label" for="extraBody">额外请求体</label>
         <textarea class="form-control" id="extraBody"
                   placeholder="请输入额外的请求体内容，将合并到请求体中，必须是合法的 JSON"
@@ -50,6 +61,7 @@
     <div>
         <button class="btn btn-primary" id="saveButton" type="button">保存</button>
         <button class="btn btn-primary" id="resetButton" type="button">重置</button>
+        <span id="saveStatus" style="margin-left: 10px; color: #198754; font-size: 13px; display: none;">✓ 保存成功</span>
     </div>
 </div>
 <script src="js/options.js" type="text/javascript"></script>

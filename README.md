@@ -6,6 +6,10 @@
 
 工作中经常需要脚本访问网站 API，这些 API 需要 Cookie 鉴权。手动复制 Cookie 麻烦且会过期，模拟登录又太复杂。这个扩展在你正常浏览网页时自动把 Cookie 同步到本地服务端，脚本直接从服务端取最新的 Cookie 即可。
 
+效果图:
+
+<img src="C:/Users/16658/AppData/Roaming/Typora/typora-user-images/image-20260519002033696.png" alt="image-20260519002033696" style="zoom: 33%;" />
+
 ## 安装
 
 ### 1. 安装扩展
@@ -30,6 +34,13 @@ node server.js
 ![image-20260517011958859](C:/Users/16658/AppData/Roaming/Typora/typora-user-images/image-20260517011958859.png)
 
 ## 扩展配置
+
+```
+http://localhost:8080/cookies
+work.open.taobao.com,
+www.bilibili.com
+*
+```
 
 点击扩展图标，弹出配置面板：
 

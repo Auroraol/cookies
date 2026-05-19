@@ -5,7 +5,6 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "browser": "node browser.js",
     "dev": "nodemon server.js"
   },
   "dependencies": {

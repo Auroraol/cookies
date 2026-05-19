@@ -5,7 +5,9 @@
   "manifest_version": 3,
   "permissions": [
     "cookies",
-    "storage"
+    "storage",
+    "alarms",
+    "tabs"
   ],
   "host_permissions": [
     "http://*/*",
