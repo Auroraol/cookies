@@ -68,6 +68,56 @@ www.bilibili.com
 - 正则：`/token/i,/^_m_h5_tk/`
 - 混合使用：`/token/i,cookie2,unb,sgcookie,/^_m_h5_tk/,cna,skt,isg`
 
+
+
+
+
+### 获取根域名 Cookie（rootDomain）详解
+
+以当前 tab 为 `work.open.taobao.com` 为例，假设浏览器中存在以下 cookie：
+
+| Cookie 名称 | 设置的 domain |
+|------------|--------------|
+| cookie2 | `.taobao.com` |
+| _miniapp_token_ | `.open.taobao.com` |
+| sid | `work.open.taobao.com` |
+
+**rootDomain = true（是，获取根域名下的所有 Cookie）**
+
+```
+parseRootDomain("work.open.taobao.com") → "taobao.com"
+查询: chrome.cookies.getAll({url: "https://taobao.com/"})
+```
+
+| Cookie | 能拿到？ | 原因 |
+|--------|---------|------|
+| cookie2 (`.taobao.com`) | ✓ | `.taobao.com` 会发送给 `taobao.com` |
+| _miniapp_token_ (`.open.taobao.com`) | ✗ | `.open.taobao.com` 不会发送给 `taobao.com` |
+| sid (`work.open.taobao.com`) | ✗ | `work.open.taobao.com` 不会发送给 `taobao.com` |
+
+**rootDomain = false（否，仅获取当前域名）**
+
+```
+查询: chrome.cookies.getAll({url: "https://work.open.taobao.com/"})
+```
+
+| Cookie | 能拿到？ | 原因 |
+|--------|---------|------|
+| cookie2 (`.taobao.com`) | ✓ | 父域名 cookie，向下匹配所有子域名 |
+| _miniapp_token_ (`.open.taobao.com`) | ✓ | 父域名 cookie，向下匹配 `work.open.taobao.com` |
+| sid (`work.open.taobao.com`) | ✓ | 精确匹配当前域名 |
+
+**总结：**
+
+| 设置 | 查询目标 | 拿到的 cookie 范围 |
+|------|---------|------------------|
+| true（根域名） | `taobao.com` | 只有 `.taobao.com` 的，**更少** |
+| false（当前域名） | `work.open.taobao.com` | 所有父域名 + 当前域名的，**更多** |
+
+> 名字叫"获取根域名下的所有 Cookie"，但实际上因为 `chrome.cookies.getAll` 是按"哪些 cookie 会发送给这个 URL"来过滤的，查根域名反而拿得更少。
+>
+> 如果发现某个 cookie 没被采集到，可以在 DevTools → Application → Cookies 中确认它的 domain 字段，如果不是 `.taobao.com`，需要关闭 rootDomain 或打开对应域名的 tab。
+
 ## 后端 API
 
 ### 接收 Cookie（扩展自动调用）
@@ -186,3 +236,4 @@ resp = requests.get('https://example.com/api/list?page=1',
 - Cookie 会过期，扩展在每次页面加载时自动更新，保持浏览器打开即可
 - 如果接口返回 401，先把 Cookie 名称改为 `*` 排查是否遗漏了必要字段
 - 后端 Cookie 存储在内存中，重启后需要刷新网页重新获取
+

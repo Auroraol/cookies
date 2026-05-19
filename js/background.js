@@ -95,8 +95,8 @@ function collectAndUpload(domain, url) {
                     let urlObj = new URL(url);
                     if (rootDomain) {
                         urlObj.hostname = effectiveDomain;
+                        effectiveUrl = urlObj.origin + "/";
                     }
-                    effectiveUrl = urlObj.origin + "/";
                 } catch (e) {}
 
                 chrome.cookies.getAll({url: effectiveUrl}, function (cookies) {
