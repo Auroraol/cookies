@@ -8,7 +8,7 @@
 
 效果图:
 
-<img src="C:/Users/16658/AppData/Roaming/Typora/typora-user-images/image-20260519002033696.png" alt="image-20260519002033696" style="zoom: 33%;" />
+<img src="https://github.com/Auroraol/Drawing-bed/raw/main/img/image-20260519002033696.png" alt="image-20260519002033696" style="zoom: 33%;" />
 
 ## 安装
 
@@ -27,11 +27,11 @@ npm install
 node server.js
 ```
 
-![image-20260517005903699](C:/Users/16658/AppData/Roaming/Typora/typora-user-images/image-20260517005903699.png)
+![image-20260517005903699](https://github.com/Auroraol/Drawing-bed/raw/main/img/image-20260517005903699.png)
 
-![image-20260517005927804](C:/Users/16658/AppData/Roaming/Typora/typora-user-images/image-20260517005927804.png)
+![image-20260517005927804](https://github.com/Auroraol/Drawing-bed/raw/main/img/image-20260518225918856.png)
 
-![image-20260517011958859](C:/Users/16658/AppData/Roaming/Typora/typora-user-images/image-20260517011958859.png)
+![image-20260517011958859](https://github.com/Auroraol/Drawing-bed/raw/main/img/image-20260517011958859.png)
 
 ## 扩展配置
 
@@ -141,7 +141,7 @@ curl http://localhost:8080/cookies/all
 
 示例:
 
-![image-20260517005428515](C:/Users/16658/AppData/Roaming/Typora/typora-user-images/image-20260517005428515.png)
+![image-20260517005428515](https://github.com/Auroraol/Drawing-bed/raw/main/img/image-20260518231357612.png)
 
 ## 后端部署
 
@@ -176,7 +176,7 @@ curl http://localhost:8080/cookies/all
 docker-compose up -d --build  每次都重新构建镜像再启动
 ```
 
-![image-20260518225918856](C:/Users/16658/AppData/Roaming/Typora/typora-user-images/image-20260518225918856.png)
+![image-20260518225918856](https://github.com/Auroraol/Drawing-bed/raw/main/img/image-20260517005927804.png)
 
 ```
   │ cookie-server    │ openclaw-gateway │ http://openclaw-gateway:18789 
@@ -189,7 +189,7 @@ docker-compose up -d --build  每次都重新构建镜像再启动
 curl http://cookie-server:8080/cookies/all   
 ```
 
-![image-20260518231357612](C:/Users/16658/AppData/Roaming/Typora/typora-user-images/image-20260518231357612.png)
+![image-20260518231357612](https://github.com/Auroraol/Drawing-bed/raw/main/img/image-20260517005428515.png)
 
 ## 使用示例
 
